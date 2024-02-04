@@ -3,7 +3,24 @@ const router = Router();
 const userMiddleware = require("../middleware/user");
 const { User }=require("../db");
 const { Course }=require("../db");
+const jwt=require("jsonwebtoken");
 // User Routes
+
+const JWT_SECRET="monish";
+
+router.get("/signin",async function(req,res){
+    
+    const username=req.headers.username;
+    const response=await User.find({username});
+    
+    if(response){
+        const token=jwt.sign({username: username},JWT_SECRET);
+        res.status(200).json({token: token});
+    }
+    else{
+        res.status(400).json({msg: "Invalid username or password"});
+    }
+})
 router.post('/signup', async (req, res) => {
     console.log("User trying to signup");
     // Implement user signup logic
@@ -49,7 +66,8 @@ router.post('/courses/:courseId', userMiddleware, async (req, res) => {
     // Implement course purchase logic
 
     console.log("User trying to purchase course");
-    const username=req.headers.username;
+    const token=req.headers.authorization;
+    const username=jwt.decode(token).username;
     const id=req.params.courseId;
     try{
         await User.updateOne({
@@ -70,8 +88,10 @@ router.post('/courses/:courseId', userMiddleware, async (req, res) => {
 });
 
 router.get('/purchasedCourses', userMiddleware, async (req, res) => {
-    // Implement fetching purchased courses logic
-    const name=req.headers.username;
+    // // Implement fetching purchased courses logic
+    // const name=req.headers.username;
+    const token=req.headers.authorization;
+    const name=jwt.decode(token).username;
     const user=await User.findOne({
         username: name
     });
