@@ -3,7 +3,22 @@ const adminMiddleware = require("../middleware/admin");
 const router = Router();
 const { Admin }=require("../db");
 const { Course }=require("../db");
+const jwt=require("jsonwebtoken");
+const JWT_SECRET="monish";
 // Admin Routes
+router.get('/signin',async function(req,res,next){
+    const username=req.headers.username;
+    const exist=await Admin.findOne({username});
+    
+    if(exist){
+            const token=jwt.sign({username: username},JWT_SECRET);
+            res.status(200).json({token: token});
+        }
+    else{
+        res.status(411).json({msg: "User not exist"});
+    }
+
+})
 router.post('/signup', async (req, res) => {
     console.log("user request");
     // Implement admin signup logic
@@ -12,6 +27,7 @@ router.post('/signup', async (req, res) => {
      // make sure bahi the body section of the postman has json as a data type and "username": "data", you follow this 
     const password=req.body.password;
     try{
+
         const exist=await Admin.findOne({username});
         if(exist){
             res.status(400).json({msg: "User already exist"});
@@ -21,7 +37,7 @@ router.post('/signup', async (req, res) => {
                 username,
                 password
             });
-            res.json({msg: "Successfully sign up the Admin"});
+            res.json({msg: "Successfully sign up  the Admin and stored in DB"});
         }
        
     }
@@ -43,7 +59,7 @@ router.post('/courses',adminMiddleware,async (req, res) => {
         imageLink
     });
     if(resp){
-        res.json({msg: "Successfully created the course Admin"});
+        res.json({msg: "Successfully created the course"});
     }
     else{
         res.status().json({msg: " Cannot create course Admin"});
